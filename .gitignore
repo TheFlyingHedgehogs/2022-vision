@@ -2,3 +2,5 @@
 venv/
 2898-2022-vision-py.iml
 __pycache__/
+*.blend1
+calib/*/*.png
