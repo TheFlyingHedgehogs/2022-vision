@@ -17,7 +17,7 @@ class ImageRead(ImageProv):
         return self.img.copy()
 
 
-prov: ImageProv = ImageRead("images/fisheye-20d-6m.png")
+prov: ImageProv = ImageRead("images/20d-20d-up.png")
 start = time.monotonic()
 framecount = 0
 

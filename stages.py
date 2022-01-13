@@ -140,38 +140,10 @@ for triple in real_coords:
     triple[0] -= w / 2
     triple[2] += 0.67704
 
-mtx, dist, rvecs, tvecs = pkl.load(open("calib/virtual-fisheye/calib.pkl", "rb"))
+mtx, dist, rvecs, tvecs = pkl.load(open("calib/virtual-camera-1/calib.pkl", "rb"))
 
-tilt_angle = math.radians(-20)
+tilt_angle = math.radians(20)
 target_height = (8 * 12) * 0.0254
-
-
-def trig_stuff(rotation, translation):
-    length = math.sqrt((translation[0] ** 2) + (translation[1] ** 2) + (translation[2] ** 2))
-    b = math.asin(target_height / length)
-    distance = target_height / math.tan(b)
-
-    l2 = math.sqrt((translation[0] ** 2) + (translation[2] ** 2))
-    print(length)
-
-    x_dst = translation[0]
-
-    angle = math.degrees(math.atan(l2 / length))
-    # print(x_dst)
-
-    return distance, angle
-
-
-def bad_stuff(rotation: ArrayLike, translation: ArrayLike):
-    camera_pos_rotated = translation * -1
-
-    matrix = cv2.Rodrigues(rotation)
-
-    camera_pos = np.matmul(camera_pos_rotated, matrix)
-
-    print(camera_pos)
-
-    return 0.0, 0.0
 
 
 def compute_output_values(rvec, tvec):
@@ -205,9 +177,8 @@ def solvepnp(corners: list[list[Point]], img: ArrayLike):
             imagepoints[index][0] = p.x
             imagepoints[index][1] = p.y
 
-        imagepoints = cv2.fisheye.undistortPoints(np.expand_dims(np.asarray(imagepoints), -2), mtx, dist)
-        # imagepoints = cv2.fisheye.undistortPoints(imagepoints, mtx, dist)
-        # imagepoints = cv2.undistortPoints(imagepoints, mtx, dist)
+        # imagepoints = cv2.fisheye.undistortPoints(np.expand_dims(np.asarray(imagepoints), -2), mtx, dist)
+        imagepoints = cv2.undistortPoints(imagepoints, mtx, dist)
 
         success, rotation_vector, translation_vector \
             = cv2.solvePnP(real_coords, imagepoints, np.identity(3), np.zeros(5), flags=0)
