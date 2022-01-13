@@ -1,3 +1,4 @@
+import time
 import cv2
 from numpy.typing import ArrayLike
 import stages
@@ -16,15 +17,25 @@ class ImageRead(ImageProv):
         return self.img.copy()
 
 
-prov: ImageProv = ImageRead("images/20m-0d-15d-tilt.png")
+prov: ImageProv = ImageRead("images/fisheye-20d-6m.png")
+start = time.monotonic()
+framecount = 0
 
 while True:
     im: ArrayLike = prov.read()
-    cv2.imshow("input", im)
+    # cv2.imshow("input", im)
     contours = stages.find_filter_contours(im)
     corners = stages.find_corners(contours, im)
-    stages.solvepnp(corners, im)
-    if cv2.waitKey(100) & 0xFF == ord('q'):
-        break
+    distance, angle = stages.solvepnp(corners, im)
+    print(f"dst: {distance} ang: {angle}")
+    break
+    # if cv2.waitKey(100) & 0xFF == ord('q'):
+    #     break
+    # print(".", end="")
+    framecount += 1
+    if framecount == 100:
+        avg = (time.monotonic() - start) / framecount
+        print(f"avg framerate: {1 / avg}")
+        start = time.monotonic()
 
-cv2.destroyAllWindows()
+# cv2.destroyAllWindows()
