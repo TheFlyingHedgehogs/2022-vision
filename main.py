@@ -20,6 +20,7 @@ class ImageRead(ImageProv):
 prov: ImageProv = ImageRead("images/20d-20d-up.png")
 start = time.monotonic()
 framecount = 0
+total = 0
 
 while True:
     im: ArrayLike = prov.read()
@@ -35,6 +36,7 @@ while True:
     framecount += 1
     if framecount == 100:
         avg = (time.monotonic() - start) / framecount
+        framecount = 0
         print(f"avg framerate: {1 / avg}")
         start = time.monotonic()
 

@@ -143,7 +143,6 @@ for triple in real_coords:
 mtx, dist, rvecs, tvecs = pkl.load(open("calib/virtual-camera-1/calib.pkl", "rb"))
 
 tilt_angle = math.radians(20)
-target_height = (8 * 12) * 0.0254
 
 
 def compute_output_values(rvec, tvec):
@@ -182,7 +181,7 @@ def solvepnp(corners: list[list[Point]], img: ArrayLike):
 
         success, rotation_vector, translation_vector \
             = cv2.solvePnP(real_coords, imagepoints, np.identity(3), np.zeros(5), flags=0)
-        cv2.aruco.drawAxis(img, mtx, dist, rotation_vector, translation_vector, 0.1)
+        # cv2.aruco.drawAxis(img, mtx, dist, rotation_vector, translation_vector, 0.1)
         distance, angle1 = compute_output_values(rotation_vector, translation_vector)
         distances.append(distance)
         angles.append(angle1)
