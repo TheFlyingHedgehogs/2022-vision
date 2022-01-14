@@ -145,7 +145,7 @@ mtx, dist, rvecs, tvecs = pkl.load(open("calib/virtual-camera-1/calib.pkl", "rb"
 tilt_angle = math.radians(20)
 
 
-def compute_output_values(rvec, tvec):
+def compute_output_values(rvec, tvec):  # stolen from ligerbots code
     """Compute the necessary output distance and angles"""
 
     # The tilt angle only affects the distance and angle1 calcs
