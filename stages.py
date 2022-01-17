@@ -6,6 +6,7 @@ import numpy as np
 import dataclasses
 from numpy.typing import ArrayLike
 import pickle as pkl
+import utils
 
 thresh_cache = None
 hsv_cache = None
@@ -14,15 +15,23 @@ hsv_cache = None
 def find_filter_contours(img: ArrayLike) -> list[ArrayLike]:
     global thresh_cache, hsv_cache
 
+    utils.timeit("hsv", True)
     hsv_cache = cv2.cvtColor(img, cv2.COLOR_RGB2HSV, hsv_cache)
+    utils.timeit("hsv")
+    utils.timeit("inRange", True)
     thresh_cache = cv2.inRange(hsv_cache, (25, 10, 10), (100, 255, 255), thresh_cache)
+    utils.timeit("inRange")
+    utils.timeit("contours", True)
     contours, _ = cv2.findContours(thresh_cache, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    utils.timeit("contours")
+    utils.timeit("filter", True)
     output = []
     for c in contours:
         area = cv2.contourArea(c)
         if area < 100:
             continue
         output.append(c)
+    utils.timeit("filter")
     # cv2.drawContours(img, contours, -1, (255, 0, 0))
     # cv2.imshow("contours", img)
     return output
