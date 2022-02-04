@@ -16,7 +16,7 @@ for row in objp:
 # Arrays to store object points and image points from all the images.
 objpoints = []  # 3d point in real world space
 imgpoints = []  # 2d points in image plane.
-images = glob.glob("calib/virtual-camera-1/*.png")
+images = glob.glob("calib/lowres/*.png")
 # imgobjpoint_queue = multiprocessing.queues.Queue()
 
 
@@ -50,8 +50,8 @@ with pool.Pool(10) as p:
         objpoints.append(objpts)
 
     ret, mtx, dist, rvecs, tvecs = \
-        cv.calibrateCamera(objpoints, imgpoints, (1920, 1080), None, None)
+        cv.calibrateCamera(objpoints, imgpoints, (640, 480), None, None)
     cv.destroyAllWindows()
 
-    with open("calib/virtual-camera-1/calib.pkl", "wb") as f:
+    with open("calib/lowres/calib.pkl", "wb") as f:
         pkl.dump((mtx, dist, rvecs, tvecs), f)

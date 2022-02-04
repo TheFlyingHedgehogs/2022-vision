@@ -15,25 +15,26 @@ hsv_cache = None
 def find_filter_contours(img: ArrayLike) -> list[ArrayLike]:
     global thresh_cache, hsv_cache
 
-    utils.timeit("hsv", True)
+    # utils.timeit("hsv", True)
     hsv_cache = cv2.cvtColor(img, cv2.COLOR_RGB2HSV, hsv_cache)
-    utils.timeit("hsv")
-    utils.timeit("inRange", True)
-    thresh_cache = cv2.inRange(hsv_cache, (25, 10, 10), (100, 255, 255), thresh_cache)
-    utils.timeit("inRange")
-    utils.timeit("contours", True)
+    # utils.timeit("hsv")
+    # utils.timeit("inRange", True)
+    thresh_cache = cv2.inRange(hsv_cache, (10, 100, 70), (100, 255, 255), thresh_cache)
+    # utils.timeit("inRange")
+    # utils.timeit("contours", True)
     contours, _ = cv2.findContours(thresh_cache, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    utils.timeit("contours")
-    utils.timeit("filter", True)
+    # utils.timeit("contours")
+    # utils.timeit("filter", True)
     output = []
     for c in contours:
         area = cv2.contourArea(c)
-        if area < 100:
+        if area < 75:
             continue
         output.append(c)
-    utils.timeit("filter")
-    # cv2.drawContours(img, contours, -1, (255, 0, 0))
-    # cv2.imshow("contours", img)
+    # utils.timeit("filter")
+    # im2 = img.copy()
+    # cv2.drawContours(im2, contours, -1, (255, 0, 0))
+    # cv2.imshow("contours", im2)
     return output
 
 
@@ -82,7 +83,7 @@ def find_corners(contours: list[ArrayLike], img: ArrayLike) -> list[list[Point]]
         # cv2.drawMarker(img, (int(rb[0]), int(rb[1])), (255, 0, 255))
         # cv2.drawMarker(img, (int(lt[0]), int(lt[1])), (255, 255, 255))
         # cv2.drawMarker(img, (int(rt[0]), int(rt[1])), (0, 255, 0))
-        # cv2.imshow("corner", img)
+        #cv2.imshow("corner", img)
         corners.append([
             Point(int(lb[0]), int(lb[1])),
             Point(int(rb[0]), int(rb[1])),
@@ -149,9 +150,9 @@ for triple in real_coords:
     triple[0] -= w / 2
     triple[2] += 0.67704
 
-mtx, dist, rvecs, tvecs = pkl.load(open("calib/virtual-camera-1/calib.pkl", "rb"))
+mtx, dist, rvecs, tvecs = pkl.load(open("/home/pi/2898-2022-vision-py/calib/elp-1/calib.pkl", "rb"))
 
-tilt_angle = math.radians(20)
+tilt_angle = math.radians(9.33)
 
 
 def compute_output_values(rvec, tvec):  # stolen from ligerbots code
@@ -173,7 +174,7 @@ def compute_output_values(rvec, tvec):  # stolen from ligerbots code
     # pzero_world = np.matmul(rot_inv, -tvec)
     # angle2 = math.atan2(pzero_world[0][0], pzero_world[2][0])
 
-    return distance, math.degrees(angle1)
+    return distance, angle1
 
 
 def solvepnp(corners: list[list[Point]], img: ArrayLike):
@@ -185,8 +186,8 @@ def solvepnp(corners: list[list[Point]], img: ArrayLike):
             imagepoints[index][0] = p.x
             imagepoints[index][1] = p.y
 
-        # imagepoints = cv2.fisheye.undistortPoints(np.expand_dims(np.asarray(imagepoints), -2), mtx, dist)
-        imagepoints = cv2.undistortPoints(imagepoints, mtx, dist)
+        imagepoints = cv2.fisheye.undistortPoints(np.expand_dims(np.asarray(imagepoints), -2), mtx, dist)
+        # imagepoints = cv2.undistortPoints(imagepoints, mtx, dist)
 
         success, rotation_vector, translation_vector \
             = cv2.solvePnP(real_coords, imagepoints, np.identity(3), np.zeros(5), flags=0)
@@ -195,7 +196,11 @@ def solvepnp(corners: list[list[Point]], img: ArrayLike):
         distances.append(distance)
         angles.append(angle1)
 
+    # cv2.imshow("axis", img)
+
+    if len(distances) == 0:
+        return 0.0, 0.0
+
     return statistics.median(distances), statistics.median(angles)
 
     # print(f"distance: {statistics.median(distances)}, angle: {statistics.median(angles)}")
-    # cv2.imshow("axis", img)
