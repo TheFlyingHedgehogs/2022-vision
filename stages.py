@@ -111,7 +111,7 @@ def find_corners(contours: list[ArrayLike], img: ArrayLike) -> list[list[Point]]
         converted_corners[i * 4 + 3][0] = corners[i][3].x
         converted_corners[i * 4 + 3][1] = corners[i][3].y
 
-    refined = cv2.cornerSubPix(gray, converted_corners, (4, 4), (-1, -1), criteria)
+    refined = cv2.cornerSubPix(gray, converted_corners, (6, 6), (-1, -1), criteria)
 
     output = []
     for i in range(0, int(len(refined) / 4)):
@@ -126,11 +126,15 @@ def find_corners(contours: list[ArrayLike], img: ArrayLike) -> list[list[Point]]
     # print(corners)
     # print(output)
 
+    # img2 = cv2.resize(img, (1920 * 4, 1080 * 4))
+
     # for quad in output:
-    #     cv2.drawMarker(img, (int(quad[0].x), int(quad[0].y)), (0, 0, 255))
-    #     cv2.drawMarker(img, (int(quad[1].x), int(quad[1].y)), (0, 255, 0))
-    #     cv2.drawMarker(img, (int(quad[2].x), int(quad[2].y)), (0, 255, 255))
-    #     cv2.drawMarker(img, (int(quad[3].x), int(quad[3].y)), (255, 0, 0))
+    #     cv2.drawMarker(img2, (int(quad[0].x * 4), int(quad[0].y * 4)), (0, 0, 255))
+    #     cv2.drawMarker(img2, (int(quad[1].x * 4), int(quad[1].y * 4)), (0, 255, 0))
+    #     cv2.drawMarker(img2, (int(quad[2].x * 4), int(quad[2].y * 4)), (0, 255, 255))
+    #     cv2.drawMarker(img2, (int(quad[3].x * 4), int(quad[3].y * 4)), (255, 0, 0))
+    # cv2.imshow("img", img)
+    # cv2.imshow("corners", img2)
 
     return output
 
@@ -150,7 +154,8 @@ for triple in real_coords:
     triple[0] -= w / 2
     triple[2] += 0.67704
 
-mtx, dist, rvecs, tvecs = pkl.load(open("/home/pi/2898-2022-vision-py/calib/elp-1/calib.pkl", "rb"))
+# /home/pi/2898-2022-vision-py/
+mtx, dist, rvecs, tvecs = pkl.load(open("calib/elp-1/calib.pkl", "rb"))
 
 tilt_angle = math.radians(9.33)
 

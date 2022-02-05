@@ -37,32 +37,30 @@ class VideoCap(ImageProv):
         #     return r[1]
 
 
-cam = cv2.VideoCapture(0)
+# cam = cv2.VideoCapture(0)
 # cam.open(2, cv2.CAP_V4L2)
-cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+# cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+# cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+# cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
 
-prov: ImageProv = VideoCap(cam)
+prov: ImageProv = VideoCap(cv2.VideoCapture("output.mkv"))
 start = time.monotonic()
 framecount = 0
 total = 0
-#table = networktables.NetworkTablesInstance.getDefault().getTable("vision")
-#nt = networktables.NetworkTablesInstance.getDefault()
-#nt.setServer("10.28.98.2")
-#table = nt.getTable("vision")
-#table = networktables.NetworkTables.initialize("10.28.98.2").getTable("vision")
 networktables.NetworkTables.initialize("10.28.98.2")
 table = networktables.NetworkTables.getTable("vision")
 
 distance_entry = table.getEntry("distance")
 angle_entry = table.getEntry("angle")
-# for i in range(200):
 avg_d = []
 avg_a = []
-window = 20
+window = 50
+# output = cv2.VideoWriter()
+# output.open("output.mkv", cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10.0, (1920, 1080))
+# for i in range(100):
 while True:
     im: ArrayLike = prov.read()
+    # output.write(im)
     # im2 = im.copy()
     # cv2.drawMarker(im2, (500, 500), (255, 255, 0))
 
@@ -100,8 +98,8 @@ while True:
 
     # cv2.imshow("undistorted", undistorted)
 
-    # if cv2.waitKey(1) & 0xFF == ord('q'):
-    #     break
+    if cv2.waitKey(100) & 0xFF == ord('q'):
+        break
 
     # print(".", end="")
     framecount += 1
@@ -116,6 +114,9 @@ while True:
 
     distance_entry.setDouble(distance)
     angle_entry.setDouble(angle)
+    print(f"dst: {distance} ang: {angle}")
+    if len(avg_d) > 1:
+        print(f"stddev: {statistics.stdev(avg_d)}")
 
     # if framecount == 25:
     #     print(f"dst: {distance} ang: {angle}")
@@ -130,5 +131,6 @@ while True:
     #     start = time.monotonic()
 
 # cv2.destroyAllWindows()
+# output.release()
 
 # print(utils.timing)
