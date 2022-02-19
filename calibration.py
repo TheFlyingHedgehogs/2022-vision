@@ -4,38 +4,55 @@ import glob
 import pickle as pkl
 from multiprocessing import pool
 
+shape = 7, 7
+
 # termination criteria
 criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-objp = np.zeros((5*5, 3), np.float32)
-objp[:, :2] = np.mgrid[0:5, 0:5].T.reshape(-1, 2)
+objp = np.zeros((shape[0] * shape[1], 3), np.float32)
+objp[:, :2] = np.mgrid[0:shape[0], 0:shape[1]].T.reshape(-1, 2)
+# objp = np.zeros((6*8, 3), np.float32)
+# objp[:, :2] = np.mgrid[0:6, 0:8].T.reshape(-1, 2)
 for row in objp:
+    # row[0] *= 21.6 / 1000
+    # row[1] *= 21.6 / 1000
     row[0] *= 0.25
     row[1] *= 0.25
 
 # Arrays to store object points and image points from all the images.
 objpoints = []  # 3d point in real world space
 imgpoints = []  # 2d points in image plane.
-images = glob.glob("calib/lowres/*.png")
+images = glob.glob("calib/virtual-camera-2/*.png")
+# images = glob.glob("calib/picam-1/*.png")
 # imgobjpoint_queue = multiprocessing.queues.Queue()
+# inp = cv.VideoCapture("calib/picam-1/video-slow.mkv")
+# images = []
+# ret = True
+# while ret:
+#     ret, img = inp.read()
+#     if ret:
+#         images.append(img)
 
 
 def calib(fname: str):
     img = cv.imread(fname)
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     # Find the chess board corners
-    ret, corners = cv.findChessboardCorners(gray, (5, 5), None)
+    ret, corners = cv.findChessboardCorners(gray, shape, None)
+    # ret, corners = cv.findChessboardCorners(gray, (6, 8), None)
     # If found, add object points, image points (after refining them)
     if ret:
         # objpoint_queue.put(objp)
         corners2 = cv.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
         # imgpoint_queue.put(corners)
         # imgobjpoint_queue.put()
+        print(".", end="")
         return corners2, objp
         # # Draw and display the corners
         # cv.drawChessboardCorners(img, (5, 5), corners2, ret)
         # cv.imshow('img', img)
         # cv.waitKey(500)
+    print("-", end="")
     return []
 
 
@@ -50,8 +67,9 @@ with pool.Pool(10) as p:
         objpoints.append(objpts)
 
     ret, mtx, dist, rvecs, tvecs = \
-        cv.calibrateCamera(objpoints, imgpoints, (640, 480), None, None)
-    cv.destroyAllWindows()
+        cv.calibrateCamera(objpoints, imgpoints, (1920, 1080), None, None)
+    #cv.destroyAllWindows()
 
-    with open("calib/lowres/calib.pkl", "wb") as f:
+    with open("calib/virtual-camera-2/calib.pkl", "wb") as f:
+    # with open("calib/picam-1/calib.pkl", "wb") as f:
         pkl.dump((mtx, dist, rvecs, tvecs), f)

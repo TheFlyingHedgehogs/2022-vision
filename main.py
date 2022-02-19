@@ -43,15 +43,16 @@ class VideoCap(ImageProv):
 # cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 # cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
 
-prov: ImageProv = VideoCap(cv2.VideoCapture("output.mkv"))
+# prov: ImageProv = VideoCap(cv2.VideoCapture("output.mkv"))
+prov: ImageProv = ImageRead("images/6m-0m-0d.png")
 start = time.monotonic()
 framecount = 0
 total = 0
-networktables.NetworkTables.initialize("10.28.98.2")
-table = networktables.NetworkTables.getTable("vision")
+# networktables.NetworkTables.initialize("10.28.98.2")
+# table = networktables.NetworkTables.getTable("vision")
 
-distance_entry = table.getEntry("distance")
-angle_entry = table.getEntry("angle")
+# distance_entry = table.getEntry("distance")
+# angle_entry = table.getEntry("angle")
 avg_d = []
 avg_a = []
 window = 50
@@ -112,8 +113,8 @@ while True:
     #if distance == 0 and angle == 0:
     #    continue
 
-    distance_entry.setDouble(distance)
-    angle_entry.setDouble(angle)
+    # distance_entry.setDouble(distance)
+    # angle_entry.setDouble(angle)
     print(f"dst: {distance} ang: {angle}")
     if len(avg_d) > 1:
         print(f"stddev: {statistics.stdev(avg_d)}")

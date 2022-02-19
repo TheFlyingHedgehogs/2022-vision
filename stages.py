@@ -19,7 +19,8 @@ def find_filter_contours(img: ArrayLike) -> list[ArrayLike]:
     hsv_cache = cv2.cvtColor(img, cv2.COLOR_RGB2HSV, hsv_cache)
     # utils.timeit("hsv")
     # utils.timeit("inRange", True)
-    thresh_cache = cv2.inRange(hsv_cache, (10, 100, 70), (100, 255, 255), thresh_cache)
+    thresh_cache = cv2.inRange(hsv_cache, (0, 10, 10), (100, 255, 255), thresh_cache)
+    # thresh_cache = cv2.inRange(hsv_cache, (10, 100, 70), (100, 255, 255), thresh_cache)
     # utils.timeit("inRange")
     # utils.timeit("contours", True)
     contours, _ = cv2.findContours(thresh_cache, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -155,29 +156,69 @@ for triple in real_coords:
     triple[2] += 0.67704
 
 # /home/pi/2898-2022-vision-py/
-mtx, dist, rvecs, tvecs = pkl.load(open("calib/elp-1/calib.pkl", "rb"))
+# mtx, dist, rvecs, tvecs = pkl.load(open("calib/picam-1/calib.pkl", "rb"))
+mtx, dist, rvecs, tvecs = pkl.load(open("calib/virtual-camera-2/calib.pkl", "rb"))
 
-tilt_angle = math.radians(9.33)
+# tilt_angle = math.radians(9.33)
+tilt_angle = math.radians(-20)
+# tilt_angle = math.radians(16.5)
+
+# x
+# [ 0.01248718 -1.81977671  6.14176873]
+# [2.98642930e-03 2.57007537e+00 5.90170058e+00]
+tilt_matrix = np.array([
+    [1, 0, 0],
+    [0, cos(-tilt_angle), -sin(-tilt_angle)],
+    [0, sin(-tilt_angle), cos(-tilt_angle)]
+])
+
+# y
+# [2.21303927 0.41532774 6.08910597]
+# [-2.21871544  0.41532774  6.08704001]
+# tilt_matrix = np.array([
+#     [cos(-tilt_angle), 0, sin(-tilt_angle)],
+#     [0, 1, 0],
+#     [-sin(-tilt_angle), 0, cos(-tilt_angle)]
+# ])
+
+# z
+# [-0.12185139  0.37129401  6.39377504]
+# [0.12430388 0.37350121 6.44699508]
+# tilt_matrix = np.array([
+#     [cos(-tilt_angle), -sin(-tilt_angle), 0],
+#     [sin(-tilt_angle), cos(-tilt_angle), 0],
+#     [0, 0, 1]
+# ])
 
 
 def compute_output_values(rvec, tvec):  # stolen from ligerbots code
     """Compute the necessary output distance and angles"""
 
-    # The tilt angle only affects the distance and angle1 calcs
+    x = tvec[2]
+    y = tvec[0]
+    z = tvec[1]
 
-    x = tvec[0][0]
-    z = math.sin(tilt_angle) * tvec[1][0] + math.cos(tilt_angle) * tvec[2][0]
+    # hyp = math.sqrt(x ** 2 + z ** 2)
+    # ang = math.atan(z / x) + tilt_angle
+    #
+    # d = hyp / math.cos(ang)
+    #
+    # distance = math.sqrt(d ** 2 + y ** 2)
 
-    # distance in the horizontal plane between camera and target
-    distance = math.sqrt(x ** 2 + z ** 2)
+    # p1 = [cos(tilt_angle) * x, y, sin(tilt_angle) * x]
+    # p1[0] -= sin(tilt_angle) * z
+    # p1[2] += cos(tilt_angle) * z
+    #
+    # distance = math.sqrt(p1[0] ** 2 + p1[1] ** 2)
+    # angle1 = 0.0
 
-    # horizontal angle between camera center line and target
-    angle1 = math.atan2(x, z)
+    rotated = np.matmul(np.squeeze(tvec), tilt_matrix)
 
-    # rot, _ = cv2.Rodrigues(rvec)
-    # rot_inv = rot.transpose()
-    # pzero_world = np.matmul(rot_inv, -tvec)
-    # angle2 = math.atan2(pzero_world[0][0], pzero_world[2][0])
+    print("AAAAAAAAAAAAAAAA")
+    print(rotated)
+
+    distance = 0
+    angle1 = 0
 
     return distance, angle1
 
@@ -191,12 +232,14 @@ def solvepnp(corners: list[list[Point]], img: ArrayLike):
             imagepoints[index][0] = p.x
             imagepoints[index][1] = p.y
 
-        imagepoints = cv2.fisheye.undistortPoints(np.expand_dims(np.asarray(imagepoints), -2), mtx, dist)
-        # imagepoints = cv2.undistortPoints(imagepoints, mtx, dist)
+        # imagepoints = cv2.fisheye.undistortPoints(np.expand_dims(np.asarray(imagepoints), -2), mtx, dist)
+        imagepoints = cv2.undistortPoints(imagepoints, mtx, dist)
 
         success, rotation_vector, translation_vector \
             = cv2.solvePnP(real_coords, imagepoints, np.identity(3), np.zeros(5), flags=0)
         # cv2.aruco.drawAxis(img, mtx, dist, rotation_vector, translation_vector, 0.1)
+        translation_vector[1] *= -1
+        print(translation_vector)
         distance, angle1 = compute_output_values(rotation_vector, translation_vector)
         distances.append(distance)
         angles.append(angle1)
