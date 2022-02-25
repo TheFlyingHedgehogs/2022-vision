@@ -6,3 +6,5 @@ __pycache__/
 calib/*/*.png
 calib/*/*.jpg
 field*
+archive.tar
+2022-vision-non-fisheye-animated-camera.blend

@@ -1,8 +1,9 @@
 import math
+import pprint
 import statistics
 import time
 import cv2
-from numpy.typing import ArrayLike
+import numpy as np
 import stages
 import utils
 from angles import find_pose
@@ -37,14 +38,28 @@ class VideoCap(ImageProv):
         #     return r[1]
 
 
+class PiCamCap(ImageProv):
+    def __init__(self):
+        self.cam = picamera.PiCamera()
+        self.cam.__enter__()
+        self.cam.resolution = (1920, 1080)
+        time.sleep(2)
+        self.image = np.empty((1920 * 1080 * 3,), dtype=np.uint8)
+
+    def read(self):
+        self.cam.capture(self.image, "bgr")
+        return self.image.reshape((1920, 1080, 3))
+
+
 # cam = cv2.VideoCapture(0)
 # cam.open(2, cv2.CAP_V4L2)
 # cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 # cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 # cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
 
-# prov: ImageProv = VideoCap(cv2.VideoCapture("output.mkv"))
-prov: ImageProv = ImageRead("images/6m-0m-0d.png")
+# prov: ImageProv = VideoCap(cam)
+# prov: ImageProv = ImageRead("images/square.png")
+prov: ImageProv = PiCamCap()
 start = time.monotonic()
 framecount = 0
 total = 0
@@ -59,8 +74,11 @@ window = 50
 # output = cv2.VideoWriter()
 # output.open("output.mkv", cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10.0, (1920, 1080))
 # for i in range(100):
+# path = "images/4to5/"
+# for i in range(42, 53):
 while True:
-    im: ArrayLike = prov.read()
+    # im: ArrayLike = cv2.imread(path + "00" + str(i) + ".png")
+    im = prov.read()
     # output.write(im)
     # im2 = im.copy()
     # cv2.drawMarker(im2, (500, 500), (255, 255, 0))
@@ -99,8 +117,8 @@ while True:
 
     # cv2.imshow("undistorted", undistorted)
 
-    if cv2.waitKey(100) & 0xFF == ord('q'):
-        break
+    # if cv2.waitKey(100) & 0xFF == ord('q'):
+    #     break
 
     # print(".", end="")
     framecount += 1
@@ -115,7 +133,7 @@ while True:
 
     # distance_entry.setDouble(distance)
     # angle_entry.setDouble(angle)
-    print(f"dst: {distance} ang: {angle}")
+    print(f"dst: {distance} ang: {math.degrees(angle)}")
     if len(avg_d) > 1:
         print(f"stddev: {statistics.stdev(avg_d)}")
 
@@ -133,5 +151,7 @@ while True:
 
 # cv2.destroyAllWindows()
 # output.release()
+
+# pprint.pprint(stages.out)
 
 # print(utils.timing)

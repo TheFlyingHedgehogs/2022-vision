@@ -22,7 +22,10 @@ for row in objp:
 # Arrays to store object points and image points from all the images.
 objpoints = []  # 3d point in real world space
 imgpoints = []  # 2d points in image plane.
+filenames = []  # 2d points in image plane.
 images = glob.glob("calib/virtual-camera-2/*.png")
+
+
 # images = glob.glob("calib/picam-1/*.png")
 # imgobjpoint_queue = multiprocessing.queues.Queue()
 # inp = cv.VideoCapture("calib/picam-1/video-slow.mkv")
@@ -43,33 +46,44 @@ def calib(fname: str):
     # If found, add object points, image points (after refining them)
     if ret:
         # objpoint_queue.put(objp)
-        corners2 = cv.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
+        corners2 = cv.cornerSubPix(gray, corners, (5, 5), (-1, -1), criteria)
         # imgpoint_queue.put(corners)
         # imgobjpoint_queue.put()
         print(".", end="")
-        return corners2, objp
+        # return corners2, objp
         # # Draw and display the corners
-        # cv.drawChessboardCorners(img, (5, 5), corners2, ret)
+        # cv.drawChessboardCorners(img, (7, 7), corners2, ret)
         # cv.imshow('img', img)
-        # cv.waitKey(500)
+        # cv.waitKey(1000)
+        return corners2, objp, fname
     print("-", end="")
     return []
 
 
-with pool.Pool(10) as p:
+with pool.Pool(4) as p:
     lst = list(p.map(calib, images))
 
     for item in lst:
         if len(item) == 0:
             continue
-        imgpts, objpts = item
+        imgpts, objpts, fname = item
         imgpoints.append(imgpts)
         objpoints.append(objpts)
+        filenames.append(fname)
+
+    # mtx = np.zeros((3, 3))
+    # dist = np.zeros((4, 1))
+    # rvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(len(imgpoints))]
+    # tvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(len(imgpoints))]
 
     ret, mtx, dist, rvecs, tvecs = \
-        cv.calibrateCamera(objpoints, imgpoints, (1920, 1080), None, None)
-    #cv.destroyAllWindows()
+        cv.calibrateCamera(objpoints, imgpoints, (1920, 1080),
+                           None,
+                           None)
+
+    print(tvecs[filenames.index("calib/virtual-camera-2/0041.png")])
+    # cv.destroyAllWindows()
 
     with open("calib/virtual-camera-2/calib.pkl", "wb") as f:
-    # with open("calib/picam-1/calib.pkl", "wb") as f:
+        # with open("calib/picam-1/calib.pkl", "wb") as f:
         pkl.dump((mtx, dist, rvecs, tvecs), f)
