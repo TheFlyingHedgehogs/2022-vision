@@ -14,27 +14,27 @@ hsv_cache = None
 def find_filter_contours(img):
     global thresh_cache, hsv_cache
 
-    # utils.timeit("hsv", True)
+    utils.timeit("hsv", True)
     hsv_cache = cv2.cvtColor(img, cv2.COLOR_RGB2HSV, hsv_cache)
-    # utils.timeit("hsv")
-    # utils.timeit("inRange", True)
+    utils.timeit("hsv")
+    utils.timeit("inRange", True)
     thresh_cache = cv2.inRange(hsv_cache, (0, 100, 100), (100, 255, 255), thresh_cache)
-    # thresh_cache = cv2.inRange(hsv_cache, (10, 100, 70), (100, 255, 255), thresh_cache)
-    # utils.timeit("inRange")
-    # utils.timeit("contours", True)
+    utils.timeit("inRange")
+    utils.timeit("contours", True)
     contours, _ = cv2.findContours(thresh_cache, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    # utils.timeit("contours")
-    # utils.timeit("filter", True)
+    utils.timeit("contours")
+    utils.timeit("filter", True)
     output = []
     for c in contours:
         area = cv2.contourArea(c)
         if area < 75:
             continue
         output.append(c)
-    # utils.timeit("filter")
-    # im2 = img.copy()
-    # cv2.drawContours(im2, contours, -1, (255, 0, 0))
-    # cv2.imshow("contours", im2)
+    utils.timeit("filter")
+    if utils.DISPLAY:
+        im2 = img.copy()
+        cv2.drawContours(im2, contours, -1, (255, 0, 0))
+        cv2.imshow("contours", im2)
     return output
 
 
@@ -79,20 +79,12 @@ def find_corners(contours, img):
         lt = np.matmul(lefttop_rot, inv_rotation_matrix)
         rb = np.matmul(rightbottom_rot, inv_rotation_matrix)
 
-        # img2 = img.copy()
-        # cv2.drawMarker(img2, (int(lb[0]), int(lb[1])), (255, 255, 0))
-        # cv2.drawMarker(img2, (int(rb[0]), int(rb[1])), (255, 0, 255))
-        # cv2.drawMarker(img2, (int(lt[0]), int(lt[1])), (255, 255, 255))
-        # cv2.drawMarker(img2, (int(rt[0]), int(rt[1])), (0, 255, 0))
-        # cv2.imshow("corner", img2)
         corners.append([
             Point(int(lb[0]), int(lb[1])),
             Point(int(rb[0]), int(rb[1])),
             Point(int(rt[0]), int(rt[1])),
             Point(int(lt[0]), int(lt[1])),
         ])
-
-    # return corners
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -112,8 +104,6 @@ def find_corners(contours, img):
         converted_corners[i * 4 + 3][0] = corners[i][3].x
         converted_corners[i * 4 + 3][1] = corners[i][3].y
 
-    # cv2.imshow("gray", gray)
-
     refined = cv2.cornerSubPix(gray, converted_corners, (11, 11), (-1, -1), criteria)
 
     output = []
@@ -125,10 +115,7 @@ def find_corners(contours, img):
             Point(refined[i * 4 + 3][0], refined[i * 4 + 3][1]),
         ])
 
-    # print("AAAAAA")
-    # print(corners)
-    # print(output)
-
+    # leaving this commented out, it's slow and the window it makes is huge
     # img2 = cv2.resize(img, (1920 * 4, 1080 * 4), interpolation=cv2.INTER_NEAREST)
     # for quad in output:
     #     cv2.drawMarker(img2, (int(quad[0].x * 4), int(quad[0].y * 4)), (0, 0, 255))
@@ -142,16 +129,11 @@ def find_corners(contours, img):
     #     cv2.drawMarker(img2, (int(quad[3].x * 4), int(quad[3].y * 4)), (255, 0, 0), markerType=cv2.MARKER_TILTED_CROSS)
     # cv2.imshow("corners", img2)
 
-    # cv2.imshow("img", img)
-
     return output
 
 
 w = 0.063405 * 2
-# # w = 5 * 2.54 / 100
 h = 2 * 2.54 / 100
-# w = 1.0
-# h = 1.0
 
 real_coords = np.array([
     [0, 0, 0],  # left bottom
@@ -168,12 +150,8 @@ for triple in real_coords:
 # mtx, dist, rvecs, tvecs = pkl.load(open("calib/picam-1/calib.pkl", "rb"))
 mtx, dist, rvecs, tvecs = pkl.load(open("calib/virtual-camera-2/calib.pkl", "rb"))
 
-# tilt_angle = math.radians(9.33)
 tilt_angle = math.radians(-20)
-# tilt_angle = math.radians(16.5)
-# tilt_angle = 0.0
 
-# x
 tilt_matrix = np.array([
     [1, 0, 0],
     [0, cos(-tilt_angle), -sin(-tilt_angle)],
@@ -212,12 +190,13 @@ def solvepnp(corners, img):
             imagepoints[index][0] = p.x
             imagepoints[index][1] = p.y
 
-        # imagepoints = cv2.fisheye.undistortPoints(np.expand_dims(np.asarray(imagepoints), -2), mtx, dist)
-        imagepoints = cv2.undistortPoints(imagepoints, mtx, dist)
+        imagepoints = cv2.fisheye.undistortPoints(np.expand_dims(np.asarray(imagepoints), -2), mtx, dist)
+        # imagepoints = cv2.undistortPoints(imagepoints, mtx, dist)
 
         success, rotation_vector, translation_vector \
             = cv2.solvePnP(real_coords, imagepoints, np.identity(3), np.zeros(5), flags=0)
-        # cv2.aruco.drawAxis(img, mtx, dist, rotation_vector, translation_vector, w / 2)
+        if utils.DISPLAY:
+            cv2.aruco.drawAxis(img, mtx, dist, rotation_vector, translation_vector, w / 2)
         # translation_vector[1] *= -1
         # print(translation_vector)
 
@@ -226,7 +205,8 @@ def solvepnp(corners, img):
         angles.append(angle1)
         tvecs.append(translation_vector)
 
-    # cv2.imshow("axis", img)
+    if utils.DISPLAY:
+        cv2.imshow("axis", img)
 
     if len(distances) == 0:
         return 0.0, 0.0
@@ -239,11 +219,5 @@ def solvepnp(corners, img):
         x_vals.append(item[0])
         y_vals.append(item[1])
         z_vals.append(item[2])
-
-    print(np.array([
-        statistics.median(x_vals),
-        statistics.median(y_vals),
-        statistics.median(z_vals)
-    ]))
 
     return statistics.median(distances), statistics.median(angles)
