@@ -1,9 +1,15 @@
 import time
 
+DISPLAY = False
+BENCHMARK = False
+NETWORKTABLES = False
+
 timing = dict()
 
 
 def timeit(name: str, starting: bool = False):
+    if not BENCHMARK:
+        return
     if starting:
         if name not in timing:
             timing[name] = [time.monotonic(), 0.0]
