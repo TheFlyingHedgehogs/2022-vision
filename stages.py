@@ -18,7 +18,7 @@ def find_filter_contours(img):
     hsv_cache = cv2.cvtColor(img, cv2.COLOR_RGB2HSV, hsv_cache)
     utils.timeit("hsv")
     utils.timeit("inRange", True)
-    thresh_cache = cv2.inRange(hsv_cache, (0, 100, 100), (100, 255, 255), thresh_cache)
+    thresh_cache = cv2.inRange(hsv_cache, (30, 100, 80), (60, 255, 255), thresh_cache)
     utils.timeit("inRange")
     utils.timeit("contours", True)
     contours, _ = cv2.findContours(thresh_cache, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -106,6 +106,14 @@ def find_corners(contours, img):
 
     refined = cv2.cornerSubPix(gray, converted_corners, (11, 11), (-1, -1), criteria)
 
+    for item in refined:
+        item[0] = 1920 - item[0]
+        item[1] = 1080 - item[1]
+    #refined = np.matmul(refined, invert_matrix)
+    #for item in refined:
+    #    item[0] += 1920 / 2
+    #    item[1] += 1080 / 2
+
     output = []
     for i in range(0, int(len(refined) / 4)):
         output.append([
@@ -147,8 +155,9 @@ for triple in real_coords:
     triple[2] += 0.674882
 
 # /home/pi/2898-2022-vision-py/
-# mtx, dist, rvecs, tvecs = pkl.load(open("calib/picam-1/calib.pkl", "rb"))
-mtx, dist, rvecs, tvecs = pkl.load(open("calib/virtual-camera-2/calib.pkl", "rb"))
+mtx, dist, rvecs, tvecs = pkl.load(open("/home/pi/2898-2022-vision-py/calib/picam-2/calib.pkl", "rb"))
+#mtx, dist, rvecs, tvecs = pkl.load(open("calib/virtual-camera-2/calib.pkl", "rb"))
+print(dist)
 
 tilt_angle = math.radians(-20)
 
@@ -156,6 +165,13 @@ tilt_matrix = np.array([
     [1, 0, 0],
     [0, cos(-tilt_angle), -sin(-tilt_angle)],
     [0, sin(-tilt_angle), cos(-tilt_angle)]
+])
+
+r = math.radians(180)
+invert_matrix = np.array([
+    [1, 0, 0],
+    [0, cos(r), -sin(r)],
+    [0, sin(r), cos(r)]
 ])
 
 
@@ -195,6 +211,7 @@ def solvepnp(corners, img):
 
         success, rotation_vector, translation_vector \
             = cv2.solvePnP(real_coords, imagepoints, np.identity(3), np.zeros(5), flags=0)
+        print(translation_vector)
         if utils.DISPLAY:
             cv2.aruco.drawAxis(img, mtx, dist, rotation_vector, translation_vector, w / 2)
         # translation_vector[1] *= -1

@@ -3,7 +3,6 @@ import statistics
 import time
 import cv2
 import numpy as np
-from numpy.typing import ArrayLike
 import stages
 import utils
 from angles import find_pose
@@ -13,7 +12,7 @@ import picamera
 
 
 class ImageProv:
-    def read(self) -> ArrayLike:
+    def read(self):
         return None
 
 
@@ -21,7 +20,7 @@ class ImageRead(ImageProv):
     def __init__(self, filename: str):
         self.img = cv2.imread(filename)
 
-    def read(self) -> ArrayLike:
+    def read(self):
         return self.img.copy()
 
 
@@ -30,7 +29,7 @@ class VideoCap(ImageProv):
         self.cap = cap
         self.image = None
 
-    def read(self) -> ArrayLike:
+    def read(self):
         return self.cap.read()[1]
         # r = self.cap.read(self.image)
         # if self.image is not None:
@@ -53,10 +52,13 @@ class PiCamCap(ImageProv):
         camera.shutter_speed = 2000
         time.sleep(2)
         self.image = np.empty((1088, 1920, 3), dtype=np.uint8)
+        self.it = iter(camera.capture_continuous(self.image, use_video_port=True, format="bgr"))
 
     def read(self):
-        self.cam.capture(self.image, "bgr")
-        return self.image[:1080, :1920, :]
+        #self.cam.capture(self.image, "bgr")
+        #return self.image[:1080, :1920, :]
+        next(self.it)
+        return self.image
 
 
 prov: ImageProv = PiCamCap()
