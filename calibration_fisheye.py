@@ -21,7 +21,7 @@ objp[0, :, :2] = np.mgrid[0:size[0], 0:size[1]].T.reshape(-1, 2)
 # Arrays to store object points and image points from all the images.
 objpoints = []  # 3d point in real world space
 imgpoints = []  # 2d points in image plane.
-images = glob.glob("calib/elp-1/*.jpg")
+images = glob.glob("calib/picam-2/*.png")
 # imgobjpoint_queue = multiprocessing.queues.Queue()
 
 
@@ -104,9 +104,9 @@ with pool.Pool(10) as p:
 
     cv2.imshow("undistorted", undistorted)
     cv2.waitKey(5000)
-    cv2.imwrite("ifjeowfoew.png", undistorted)
+    #cv2.imwrite("ifjeowfoew.png", undistorted)
 
     cv2.destroyAllWindows()
 
-    with open("calib/elp-1/calib.pkl", "wb") as f:
+    with open("calib/picam-2/calib.pkl", "wb") as f:
         pkl.dump((mtx, dist, rvecs, tvecs), f)
