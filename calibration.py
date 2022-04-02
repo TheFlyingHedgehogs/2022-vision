@@ -4,7 +4,7 @@ import glob
 import pickle as pkl
 from multiprocessing import pool
 
-shape = 6, 8
+shape = 7, 7
 
 # termination criteria
 criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -23,7 +23,7 @@ for row in objp:
 objpoints = []  # 3d point in real world space
 imgpoints = []  # 2d points in image plane.
 filenames = []  # 2d points in image plane.
-images = glob.glob("calib/picam-2/*.png")
+images = glob.glob("calib/virtual-camera-2/*.png")
 
 
 # images = glob.glob("calib/picam-1/*.png")

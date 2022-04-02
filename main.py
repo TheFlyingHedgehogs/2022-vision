@@ -8,7 +8,7 @@ import utils
 from angles import find_pose
 import networktables
 from utils import timeit
-import picamera
+# import picamera
 
 
 class ImageProv:
@@ -39,28 +39,29 @@ class VideoCap(ImageProv):
         #     return r[1]
 
 
-class PiCamCap(ImageProv):
-    def __init__(self):
-        self.cam = picamera.PiCamera()
-        self.cam.__enter__()
-        camera = self.cam
-        camera.resolution = (1920, 1080)
-        camera.framerate = 24
-        camera.awb_mode = "sunlight"
-        camera.exposure_mode = "off"
-        camera.shutter_speed = 2000
-        time.sleep(2)
-        self.image = np.empty((1088, 1920, 3), dtype=np.uint8)
-        self.it = iter(camera.capture_continuous(self.image, use_video_port=True, format="bgr"))
+# class PiCamCap(ImageProv):
+#     def __init__(self):
+#         self.cam = picamera.PiCamera()
+#         self.cam.__enter__()
+#         camera = self.cam
+#         camera.resolution = (1920, 1080)
+#         camera.framerate = 24
+#         camera.awb_mode = "sunlight"
+#         camera.exposure_mode = "off"
+#         camera.shutter_speed = 4000
+#         time.sleep(2)
+#         self.image = np.empty((1088, 1920, 3), dtype=np.uint8)
+#         self.it = iter(camera.capture_continuous(self.image, use_video_port=True, format="bgr"))
+#
+#     def read(self):
+#         #self.cam.capture(self.image, "bgr")
+#         #return self.image[:1080, :1920, :]
+#         next(self.it)
+#         return self.image
 
-    def read(self):
-        #self.cam.capture(self.image, "bgr")
-        #return self.image[:1080, :1920, :]
-        next(self.it)
-        return self.image
 
-
-prov: ImageProv = PiCamCap()
+# prov: ImageProv = PiCamCap()
+prov = ImageRead("aaa.png")
 start = time.monotonic()
 framecount = 0
 total = 0
@@ -75,6 +76,8 @@ avg_a = []
 window = 50
 while True:
     im = prov.read()
+    im = cv2.flip(im, -1)
+    #cv2.imshow("img", cv2.resize(im, (200, 200)))
 
     timeit("contours", True)
     contours = stages.find_filter_contours(im)
@@ -88,15 +91,18 @@ while True:
     distance, angle = stages.solvepnp(corners, im)
     timeit("solvepnp")
 
-    if utils.DISPLAY and cv2.waitKey(100) & 0xFF == ord('q'):
+    # utils.DISPLAY and 
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-
+    #continue
     framecount += 1
     avg_d.append(distance)
     avg_a.append(angle)
     if len(avg_d) >= window:
         avg_d.pop(0)
         avg_a.pop(0)
+    if distance != 0:
+        print(f"d: {distance} a: {angle}")
 
     if utils.NETWORKTABLES and distance != 0 and angle != 0:
         distance_entry.setDouble(distance)
