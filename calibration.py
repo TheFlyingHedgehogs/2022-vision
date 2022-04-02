@@ -4,7 +4,7 @@ import glob
 import pickle as pkl
 from multiprocessing import pool
 
-shape = 7, 7
+shape = 6, 8
 
 # termination criteria
 criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -23,7 +23,7 @@ for row in objp:
 objpoints = []  # 3d point in real world space
 imgpoints = []  # 2d points in image plane.
 filenames = []  # 2d points in image plane.
-images = glob.glob("calib/virtual-camera-2/*.png")
+images = glob.glob("calib/picam-2/*.png")
 
 
 # images = glob.glob("calib/picam-1/*.png")
@@ -39,6 +39,7 @@ images = glob.glob("calib/virtual-camera-2/*.png")
 
 def calib(fname: str):
     img = cv.imread(fname)
+    img = cv.flip(img, -1)
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     # Find the chess board corners
     ret, corners = cv.findChessboardCorners(gray, shape, None)
@@ -81,9 +82,9 @@ with pool.Pool(4) as p:
                            None,
                            None)
 
-    print(tvecs[filenames.index("calib/virtual-camera-2/0041.png")])
+    # print(tvecs[filenames.index("calib/picam-2/0041.png")])
     # cv.destroyAllWindows()
 
-    with open("calib/virtual-camera-2/calib.pkl", "wb") as f:
+    with open("calib/picam-2/calib.pkl", "wb") as f:
         # with open("calib/picam-1/calib.pkl", "wb") as f:
         pkl.dump((mtx, dist, rvecs, tvecs), f)

@@ -39,7 +39,6 @@ class VideoCap(ImageProv):
         #     return r[1]
 
 
-
 class PiCamCap(ImageProv):
     def __init__(self):
         self.cam = picamera.PiCamera()
