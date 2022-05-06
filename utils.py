@@ -1,6 +1,6 @@
 import time
 
-DISPLAY = False
+DISPLAY = True
 BENCHMARK = False
 NETWORKTABLES = False
 

@@ -19,7 +19,7 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
     # and occupied/unoccupied text
     image = frame.array
     # show the frame
-    cv2.imshow("Frame", image)
+    cv2.imshow("Frame", cv2.resize(image, (100, 100)))
     key = cv2.waitKey(1) & 0xFF
     # clear the stream in preparation for the next frame
     rawCapture.truncate(0)

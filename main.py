@@ -61,7 +61,7 @@ class VideoCap(ImageProv):
 
 
 # prov: ImageProv = PiCamCap()
-prov = ImageRead("aaa.png")
+prov = ImageRead("images/6m-1.5m-huefhwiojewi.png")
 start = time.monotonic()
 framecount = 0
 total = 0
@@ -76,7 +76,7 @@ avg_a = []
 window = 50
 while True:
     im = prov.read()
-    im = cv2.flip(im, -1)
+    # im = cv2.flip(im, -1)
     #cv2.imshow("img", cv2.resize(im, (200, 200)))
 
     timeit("contours", True)
@@ -101,8 +101,8 @@ while True:
     if len(avg_d) >= window:
         avg_d.pop(0)
         avg_a.pop(0)
-    if distance != 0:
-        print(f"d: {distance} a: {angle}")
+    # if distance != 0:
+    #     print(f"d: {distance} a: {angle}")
 
     if utils.NETWORKTABLES and distance != 0 and angle != 0:
         distance_entry.setDouble(distance)
